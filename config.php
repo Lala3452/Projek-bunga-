@@ -1,26 +1,37 @@
 <?php
-// config.php
-$host = "127.0.0.1";
-$username = "root";
-$password = "";
-$database = "financial_management";
+class Database {
+    private $host = "localhost";
+    private $db_name = "financial_management";
+    private $username = "root";
+    private $password = "";
+    public $conn;
 
-$conn = new mysqli($host, $username, $password, $database);
-
-if ($conn->connect_error) {
-    die("Koneksi database gagal: " . $conn->connect_error);
-}
-
-// Fungsi untuk membersihkan input
-function clean_input($data) {
-    return htmlspecialchars(stripslashes(trim($data)));
-}
-
-// Set timezone
-date_default_timezone_set('Asia/Jakarta');
-
-// Start session jika belum dimulai
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
+    public function getConnection() {
+        $this->conn = null;
+        
+        try {
+            // Tambahkan port dan charset yang lebih lengkap
+            $this->conn = new PDO(
+                "mysql:host=" . $this->host . 
+                ";port=3306;" . // Default port MySQL
+                "dbname=" . $this->db_name . 
+                ";charset=utf8mb4", 
+                $this->username, 
+                $this->password,
+                [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                    PDO::ATTR_EMULATE_PREPARES => false
+                ]
+            );
+            
+        } catch(PDOException $exception) {
+            // Log error jangan tampilkan ke user
+            error_log("Connection error: " . $exception->getMessage());
+            throw new Exception("Database connection failed");
+        }
+        
+        return $this->conn;
+    }
 }
 ?>
